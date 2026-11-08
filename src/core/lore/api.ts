@@ -102,24 +102,25 @@ export function useBacklinks(id: ID | undefined): Page[] | undefined {
 }
 
 /** Distinct red-link targets in a world, with how many pages want them. */
+export async function getRedLinks(worldId: ID) {
+  const links = await db.links
+    .where('worldId')
+    .equals(worldId)
+    .filter((l) => !l.toPageId)
+    .toArray()
+  const byKey = new Map<string, { title: string; key: string; from: Set<ID> }>()
+  for (const l of links) {
+    const entry = byKey.get(l.toKey) ?? { title: l.toTitle, key: l.toKey, from: new Set<ID>() }
+    entry.from.add(l.fromPageId)
+    byKey.set(l.toKey, entry)
+  }
+  return [...byKey.values()]
+    .map((e) => ({ title: e.title, key: e.key, count: e.from.size, from: [...e.from] }))
+    .sort((a, b) => b.count - a.count)
+}
+
 export function useRedLinks(worldId: ID | undefined) {
-  return useLiveQuery(async () => {
-    if (!worldId) return []
-    const links = await db.links
-      .where('worldId')
-      .equals(worldId)
-      .filter((l) => !l.toPageId)
-      .toArray()
-    const byKey = new Map<string, { title: string; key: string; from: Set<ID> }>()
-    for (const l of links) {
-      const entry = byKey.get(l.toKey) ?? { title: l.toTitle, key: l.toKey, from: new Set<ID>() }
-      entry.from.add(l.fromPageId)
-      byKey.set(l.toKey, entry)
-    }
-    return [...byKey.values()]
-      .map((e) => ({ title: e.title, key: e.key, count: e.from.size }))
-      .sort((a, b) => b.count - a.count)
-  }, [worldId])
+  return useLiveQuery(async () => (worldId ? getRedLinks(worldId) : []), [worldId])
 }
 
 /** Map of folded key → page (id + title) for the given keys; used to colour links in previews. */

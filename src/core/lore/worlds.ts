@@ -49,7 +49,7 @@ export async function updateWorld(id: ID, patch: Partial<WorldInput>): Promise<v
 }
 
 export async function deleteWorld(id: ID): Promise<void> {
-  await db.transaction('rw', [db.worlds, db.categories, db.pages, db.pageBodies, db.links, db.eras, db.maps, db.mapImages, db.markers], async () => {
+  await db.transaction('rw', [db.worlds, db.categories, db.pages, db.pageBodies, db.links, db.eras, db.maps, db.mapImages, db.markers, db.proposals], async () => {
     const pageIds = await db.pages.where('worldId').equals(id).primaryKeys()
     await db.pageBodies.bulkDelete(pageIds)
     await db.pages.where('worldId').equals(id).delete()
@@ -60,6 +60,7 @@ export async function deleteWorld(id: ID): Promise<void> {
     await db.mapImages.bulkDelete(maps.map((m) => m.imageId))
     await db.maps.where('worldId').equals(id).delete()
     await db.markers.where('worldId').equals(id).delete()
+    await db.proposals.where('worldId').equals(id).delete()
     await db.worlds.delete(id)
   })
 }

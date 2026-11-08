@@ -31,6 +31,7 @@ const VERSION = '1.0.0'
 const ORIGINS = (process.env.WORLDLEDGER_ORIGINS ?? '').split(',').map((s) => s.trim()).filter(Boolean)
 const POLL_MS = 25_000
 const CALL_TIMEOUT_MS = 60_000
+const CONNECT_GRACE_MS = 2_000
 const log = (...a) => process.stderr.write(`[worldledger-mcp] ${a.join(' ')}\n`)
 
 // ---------------------------------------------------------------- tools
@@ -133,7 +134,6 @@ const pending = new Map() // id -> { resolve, reject, timer }
 const queue = [] // calls waiting for a browser poll
 let waiters = [] // open long-polls
 let lastSeen = 0
-let lastClient = ''
 
 function originAllowed(origin) {
   if (!origin) return false
@@ -184,8 +184,15 @@ function browserConnected() {
   return Date.now() - lastSeen < POLL_MS + 10_000
 }
 
+/** Wait up to `ms` for a tab to poll (it may be reconnecting right now). */
+async function waitForBrowser(ms) {
+  const until = Date.now() + ms
+  while (!browserConnected() && Date.now() < until) await new Promise((r) => setTimeout(r, 100))
+}
+
 /** Send a tool call to the Worldledger tab and wait for its answer. */
-function callBrowser(tool, args) {
+async function callBrowser(tool, args) {
+  await waitForBrowser(CONNECT_GRACE_MS)
   return new Promise((resolve, reject) => {
     if (!browserConnected()) {
       reject(new Error('Worldledger is not connected. Open Worldledger in your browser and turn on Settings → Claude connection, then try again.'))
@@ -221,12 +228,10 @@ const server = http.createServer(async (req, res) => {
   if (!originAllowed(req.headers.origin)) return json(res, 403, { error: 'origin not allowed' })
   if (req.method === 'OPTIONS') return res.writeHead(204).end()
   if (url.pathname === '/status') {
-    lastSeen = Date.now()
-    return json(res, 200, { bridge: 'worldledger-mcp', version: VERSION })
+    return json(res, 200, { bridge: 'worldledger-mcp', version: VERSION, tab: browserConnected() })
   }
   if (url.pathname === '/poll' && req.method === 'GET') {
     lastSeen = Date.now()
-    lastClient = url.searchParams.get('client') ?? ''
     const w = { res, timer: setTimeout(() => {
       waiters = waiters.filter((x) => x !== w)
       res.writeHead(204).end()
