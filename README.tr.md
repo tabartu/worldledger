@@ -6,7 +6,7 @@ Worldledger, oyun geliştiricilerin oyun dünyalarının lore'unu yazıp yönett
 
 İlk modül **Lore Ansiklopedisi**, dünyayı bir kaynak kitap gibi tutar: kategoriler bölüm, sayfalar maddedir ve her madde diğerlerine bağlantı verebilir. Her şey tarayıcında saklanır; sunucu yok, hesap gerekmez.
 
-> **Durum:** geliştiriliyor. Altı aşamanın hepsi tamam: dünyalar, sayfalar, bölümler, iç bağlantılar, arama, geri bağlantılar, bilgi kutuları, zaman çizelgesi, ilişki ağı, haritalar, yapay zekâ desteği, dışa aktarma ve yedekleme ve EN/TR arayüz. Yol haritası için [docs/PLAN.md](docs/PLAN.md) dosyasına bak.
+> **Durum:** geliştiriliyor. Altı aşamanın hepsi tamam: dünyalar, sayfalar, bölümler, iç bağlantılar, arama, geri bağlantılar, bilgi kutuları, zaman çizelgesi, ilişki ağı, haritalar, yapay zekâ desteği, dışa aktarma ve yedekleme ve EN/TR arayüz.
 
 ## Özellikler
 
@@ -199,7 +199,6 @@ src/
 ├─ locales/        Her arayüz dili için bir klasör
 └─ sample-data/    Örnek dünyalar (İngilizce ve Türkçe)
 scripts/           Depo denetimleri (i18n, logical CSS)
-docs/PLAN.md       Mimari ve yol haritası
 ```
 
 ### Modül eklemek

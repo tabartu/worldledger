@@ -37,8 +37,9 @@ Thumbs.db
 # Impeccable engine binaries (launcher downloads a checksum-verified copy on demand)
 .claude/skills/impeccable/scripts/bin/
 
-# Impeccable local state (keep surface briefs and critiques)
-.impeccable/hook.cache.json
-.impeccable/live/
-.impeccable/questions/
-.impeccable/config.local.json
+
+# Local design tooling and private working notes (kept on the developer's machine only)
+.claude/
+.impeccable/
+PRODUCT.md
+docs/PLAN.md

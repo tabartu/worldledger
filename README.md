@@ -6,7 +6,7 @@ Worldledger is a local-first wiki for game developers to write and manage the lo
 
 Its first module, the **Lore Encyclopedia**, keeps a world as a sourcebook. Categories are chapters, pages are entries, and every entry can link to any other. Everything is stored in your browser: no server and no account.
 
-> **Status:** in development. All six stages are done: worlds, pages, chapters, internal links, search, backlinks, stat blocks, timeline, relationship graph, maps, AI assistance, export and backup, and the EN/TR interface. See [docs/PLAN.md](docs/PLAN.md) for the roadmap.
+> **Status:** in development. All six stages are done: worlds, pages, chapters, internal links, search, backlinks, stat blocks, timeline, relationship graph, maps, AI assistance, export and backup, and the EN/TR interface.
 
 ## Features
 
@@ -199,7 +199,6 @@ src/
 ├─ locales/        One folder per interface language
 └─ sample-data/    Demo worlds (English and Turkish)
 scripts/           Repository checks (i18n, logical CSS)
-docs/PLAN.md       Architecture and roadmap
 ```
 
 ### Adding a module
