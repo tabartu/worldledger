@@ -45,6 +45,26 @@
   font-family: var(--font-read);
   color: var(--ink-3);
 }
+.proposals {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-2) var(--s-3);
+  margin-block-start: var(--s-5);
+  padding-block: var(--s-3);
+  border-block-end: 1px solid var(--rule-strong);
+}
+.proposalsIcon {
+  inline-size: 1.25rem;
+  block-size: 1.25rem;
+  flex: none;
+}
+.proposalsText {
+  flex: 1;
+  min-inline-size: 14rem;
+  font-weight: 650;
+}
+
 .sectionTitle {
   margin-block-end: var(--s-3);
   padding-block-end: var(--s-2);

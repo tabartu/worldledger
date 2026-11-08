@@ -1,9 +1,11 @@
-import { CalendarRange, ListTree, Map as MapIcon, Network, Plus, Search, Settings } from 'lucide-react'
+import { CalendarRange, Inbox, ListTree, Map as MapIcon, Network, Plus, Search, Settings } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { NavLink, Outlet, useOutletContext, useParams } from 'react-router'
 import { useCategories, usePageCounts, useWorld } from '../../core/lore/api'
 import { categoryName } from '../../core/lore/categories'
+import { usePendingCount, useProposalTotal } from '../../core/mcp/proposals'
+import { useMcpSettings } from '../../core/mcp/settings'
 import type { Category, World } from '../../core/lore/types'
 import { CategoryIcon } from '../../ui/CategoryIcon'
 import { NotFound } from '../screens/NotFound'
@@ -39,6 +41,9 @@ export function WorldLayout() {
   const world = useWorld(worldId)
   const categories = useCategories(worldId)
   const counts = usePageCounts(worldId)
+  const pending = usePendingCount(worldId) ?? 0
+  const proposalTotal = useProposalTotal(worldId) ?? 0
+  const mcp = useMcpSettings()
   const { t } = useTranslation()
   const [activeCategory, setActiveCategory] = useState<string>()
   const [paletteOpen, setPaletteOpen] = useState(false)
@@ -105,27 +110,41 @@ export function WorldLayout() {
               </li>
             ))}
             <li className={styles.viewsStart}>
-              <NavLink to={`${base}/timeline`} className={`${styles.tab} ${styles.viewTab}`}>
+              <NavLink to={`${base}/timeline`} className={`${styles.tab} ${styles.viewTab}`} title={t('encyclopedia:timeline.title')}>
                 <CalendarRange aria-hidden="true" className={styles.tabIcon} strokeWidth={1.75} />
-                <span className={styles.tabLabel}>{t('encyclopedia:timeline.title')}</span>
+                <span className={`${styles.tabLabel} ${styles.compactLabel}`}>{t('encyclopedia:timeline.title')}</span>
               </NavLink>
             </li>
             <li>
-              <NavLink to={`${base}/maps`} className={`${styles.tab} ${styles.viewTab}`}>
+              <NavLink to={`${base}/maps`} className={`${styles.tab} ${styles.viewTab}`} title={t('encyclopedia:nav.maps')}>
                 <MapIcon aria-hidden="true" className={styles.tabIcon} strokeWidth={1.75} />
-                <span className={styles.tabLabel}>{t('encyclopedia:nav.maps')}</span>
+                <span className={`${styles.tabLabel} ${styles.compactLabel}`}>{t('encyclopedia:nav.maps')}</span>
               </NavLink>
             </li>
             <li>
-              <NavLink to={`${base}/graph`} className={`${styles.tab} ${styles.viewTab}`}>
+              <NavLink to={`${base}/graph`} className={`${styles.tab} ${styles.viewTab}`} title={t('encyclopedia:nav.graph')}>
                 <Network aria-hidden="true" className={styles.tabIcon} strokeWidth={1.75} />
-                <span className={styles.tabLabel}>{t('encyclopedia:nav.graph')}</span>
+                <span className={`${styles.tabLabel} ${styles.compactLabel}`}>{t('encyclopedia:nav.graph')}</span>
               </NavLink>
             </li>
+            {(pending > 0 || proposalTotal > 0 || mcp?.enabled) && (
+              <li>
+                <NavLink to={`${base}/proposals`} className={`${styles.tab} ${styles.viewTab}`} title={t('mcp:inbox.tabLabel')}>
+                  <Inbox aria-hidden="true" className={styles.tabIcon} strokeWidth={1.75} />
+                  <span className={`${styles.tabLabel} ${styles.compactLabel}`}>{t('mcp:inbox.tabLabel')}</span>
+                  {pending > 0 && (
+                    <span className={styles.pending}>
+                      <span aria-hidden="true">{pending}</span>
+                      <span className="visually-hidden">{t('mcp:inbox.pendingCount', { count: pending })}</span>
+                    </span>
+                  )}
+                </NavLink>
+              </li>
+            )}
             <li className={styles.tabManage}>
               <NavLink to={`${base}/chapters`} className={styles.tab} title={t('encyclopedia:nav.manageChapters')}>
                 <ListTree aria-hidden="true" className={styles.tabIcon} strokeWidth={1.75} />
-                <span className={`${styles.tabLabel} ${styles.manageLabel}`}>{t('encyclopedia:nav.manageChapters')}</span>
+                <span className={`${styles.tabLabel} ${styles.compactLabel}`}>{t('encyclopedia:nav.manageChapters')}</span>
               </NavLink>
             </li>
           </ul>

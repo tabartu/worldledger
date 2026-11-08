@@ -6,6 +6,7 @@
 import { isPageRef, isWorldDate } from '../lore/fields'
 import { foldKey } from '../lore/normalize'
 import type { Category, FieldDef, World, WorldDate } from '../lore/types'
+import type { ProposalWarning } from './types'
 
 type Labels = {
   category?: Record<string, { singular?: string; plural?: string }>
@@ -150,19 +151,16 @@ export function coerceValue(def: FieldDef, v: unknown): unknown {
 export function mapFields(
   category: Category,
   input: unknown,
-): { fields: Record<string, unknown>; warnings: string[] } {
+): { fields: Record<string, unknown>; warnings: ProposalWarning[] } {
   const fields: Record<string, unknown> = {}
-  const warnings: string[] = []
+  const warnings: ProposalWarning[] = []
   if (input === undefined || input === null) return { fields, warnings }
-  if (typeof input !== 'object' || Array.isArray(input)) {
-    return { fields, warnings: ['"fields" must be an object of field name → value; it was ignored.'] }
-  }
+  if (typeof input !== 'object' || Array.isArray(input)) return { fields, warnings: [{ code: 'fields_not_object' }] }
   for (const [name, value] of Object.entries(input as Record<string, unknown>)) {
     const key = foldKey(name)
     const def = category.fields.find((f) => fieldNames(f).includes(key))
     if (!def) {
-      const known = category.fields.map(fieldLabelEn).join(', ') || 'none'
-      warnings.push(`Unknown field "${name}" for ${categoryLabel(category)} (fields: ${known}); it was left out.`)
+      warnings.push({ code: 'unknown_field', field: name, chapter: categoryLabel(category), known: category.fields.map(fieldLabelEn).join(', ') })
       continue
     }
     if (value === null) {
@@ -171,13 +169,37 @@ export function mapFields(
     }
     const coerced = coerceValue(def, value)
     if (coerced === undefined) {
-      const hint = def.type === 'select' && def.options?.length ? ` Options: ${def.options.join(', ')}.` : ''
-      warnings.push(`Value ${JSON.stringify(value)} does not fit field "${fieldLabelEn(def)}" (${def.type}); it was left out.${hint}`)
+      warnings.push({
+        code: 'bad_value',
+        field: fieldLabelEn(def),
+        fieldId: def.id,
+        value: JSON.stringify(value),
+        type: def.type,
+        ...(def.type === 'select' && def.options?.length ? { options: def.options.join(', ') } : {}),
+      })
       continue
     }
     fields[def.id] = coerced
   }
   return { fields, warnings }
+}
+
+/** A warning in English, for Claude. */
+export function warningText(w: ProposalWarning): string {
+  switch (w.code) {
+    case 'fields_not_object':
+      return '"fields" must be an object of field name → value; it was ignored.'
+    case 'unknown_field':
+      return `Unknown field "${w.field}" for ${w.chapter} (fields: ${w.known || 'none'}); it was left out.`
+    case 'bad_value':
+      return `Value ${w.value} does not fit field "${w.field}" (${w.type}); it was left out.${w.options ? ` Options: ${w.options}.` : ''}`
+    case 'bad_date':
+      return `"${w.field}" ${w.value} is not a year or {year, month, day}; it was left out.`
+    case 'alias_taken':
+      return `Alias "${w.alias}" is already used by the page "${w.page}".`
+    case 'title_taken':
+      return `A page titled "${w.page}" already exists. The user can accept this as an addition to it; use propose_edit for existing pages.`
+  }
 }
 
 /** Format a world date in the world's calendar, in English, for Claude. */

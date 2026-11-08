@@ -8,6 +8,7 @@ import { useDocumentTitle } from '../shell/useDocumentTitle'
 import { useTheme, type ThemePref } from '../theme'
 import { AISettings } from './AISettings'
 import styles from './AppSettings.module.css'
+import { McpSettings } from './McpSettings'
 
 const THEMES: ThemePref[] = ['system', 'light', 'dark']
 
@@ -66,6 +67,8 @@ export function AppSettings() {
         </fieldset>
 
         <AISettings />
+
+        <McpSettings />
 
         <section className={styles.group}>
           <h2 className={styles.legend}>{t('settings:data.title')}</h2>

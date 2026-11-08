@@ -23,6 +23,7 @@ import {
   parseWorldDate,
   resolveCategory,
   ToolError,
+  warningText,
 } from './mapping'
 import { acceptProposal, addProposal, getProposals } from './proposals'
 import { getMcpSettings } from './settings'
@@ -96,7 +97,7 @@ function describeProposal(p: Proposal, world: World) {
 
 async function finish(proposal: Proposal, world: World, canWriteDirectly: boolean) {
   const { directWrites } = await getMcpSettings()
-  const warnings = proposal.warnings.length ? { warnings: proposal.warnings } : {}
+  const warnings = proposal.warnings.length ? { warnings: proposal.warnings.map(warningText) } : {}
   if (directWrites && canWriteDirectly) {
     try {
       await acceptProposal(proposal, { direct: true })
@@ -271,15 +272,15 @@ export const TOOL_HANDLERS: Record<string, Handler> = {
     const { fields, warnings } = mapFields(category, args.fields)
     const date = args.date !== undefined && args.date !== null ? parseWorldDate(args.date) : undefined
     const endDate = args.end_date !== undefined && args.end_date !== null ? parseWorldDate(args.end_date) : undefined
-    if (args.date != null && !date) warnings.push(`"date" ${JSON.stringify(args.date)} is not a year or {year, month, day}; it was left out.`)
-    if (args.end_date != null && !endDate) warnings.push(`"end_date" ${JSON.stringify(args.end_date)} is not a year or {year, month, day}; it was left out.`)
+    if (args.date != null && !date) warnings.push({ code: 'bad_date', field: 'date', value: JSON.stringify(args.date) })
+    if (args.end_date != null && !endDate) warnings.push({ code: 'bad_date', field: 'end_date', value: JSON.stringify(args.end_date) })
     const existing = await findPageByKey(world.id, foldKey(title))
     for (const a of strList(args.aliases)) {
       const taken = await findPageByKey(world.id, foldKey(a))
-      if (taken) warnings.push(`Alias "${a}" is already used by the page "${taken.title}".`)
+      if (taken) warnings.push({ code: 'alias_taken', alias: a, page: taken.title })
     }
     if (existing) {
-      warnings.push(`A page titled "${existing.title}" already exists. The user can accept this as an addition to it; next time use propose_edit for existing pages.`)
+      warnings.push({ code: 'title_taken', page: existing.title })
     }
     const proposal = await addProposal({
       kind: 'create',
@@ -294,7 +295,7 @@ export const TOOL_HANDLERS: Record<string, Handler> = {
       note: str(args.note) || undefined,
       warnings,
     })
-    return finish(proposal, world, !existing && !warnings.some((w) => w.startsWith('Alias')))
+    return finish(proposal, world, !existing && !warnings.some((w) => w.code === 'alias_taken'))
   },
 
   async propose_edit(args) {
@@ -304,9 +305,11 @@ export const TOOL_HANDLERS: Record<string, Handler> = {
     const append = typeof args.append === 'string' && args.append.trim() ? args.append.trim() : undefined
     const replaceBody = typeof args.replace_body === 'string' ? args.replace_body.trim() : undefined
     const mapped = category ? mapFields(category, args.fields) : { fields: {}, warnings: [] }
+    // Clearing a field that is already empty changes nothing.
+    for (const [id, v] of Object.entries(mapped.fields)) if (v === null && page.fields[id] === undefined) delete mapped.fields[id]
     const aliases = strList(args.aliases)
     if (!append && replaceBody === undefined && !Object.keys(mapped.fields).length && !aliases.length) {
-      throw new ToolError(`Nothing to change. Pass "append", "replace_body", "fields" or "aliases".${mapped.warnings.length ? ` ${mapped.warnings.join(' ')}` : ''}`)
+      throw new ToolError(`Nothing to change. Pass "append", "replace_body", "fields" or "aliases".${mapped.warnings.length ? ` ${mapped.warnings.map(warningText).join(' ')}` : ''}`)
     }
     const proposal = await addProposal({
       kind: 'update',

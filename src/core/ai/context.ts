@@ -3,6 +3,7 @@ import { formatWorldDate } from '../lore/calendar'
 import { isPageRef, isWorldDate } from '../lore/fields'
 import { foldKey } from '../lore/normalize'
 import type { Category, ID, Page, World } from '../lore/types'
+import { categoryLabel, fieldLabelEn } from '../mcp/mapping'
 
 /**
  * Choose which lore to send with a request: the focus page in full, then the
@@ -74,7 +75,7 @@ async function neighbours(ids: ID[]): Promise<Map<ID, number>> {
 }
 
 function serialize(p: Page, cat: Category | undefined, body: string, world: World, limit: number): string {
-  const lines = [`## ${p.title}${cat ? ` (${cat.builtIn ?? cat.name})` : ''}`]
+  const lines = [`## ${p.title}${cat ? ` (${categoryLabel(cat)})` : ''}`]
   if (p.aliases.length) lines.push(`Also known as: ${p.aliases.join(', ')}`)
   const date = (d: { year: number; month?: number; day?: number; approximate?: boolean }) => {
     const f = formatWorldDate(d, world.calendar, 'en')
@@ -85,7 +86,7 @@ function serialize(p: Page, cat: Category | undefined, body: string, world: Worl
   for (const f of cat?.fields ?? []) {
     const v = p.fields[f.id]
     if (v === undefined || v === null || v === '') continue
-    const name = f.label ?? f.key
+    const name = fieldLabelEn(f)
     if (isWorldDate(v)) facts.push(`${name}: ${date(v)}`)
     else if (isPageRef(v)) facts.push(`${name}: [[${v.ref}]]`)
     else if (Array.isArray(v)) facts.push(`${name}: ${v.map((x) => (isPageRef(x) ? `[[${x.ref}]]` : String(x))).join(', ')}`)

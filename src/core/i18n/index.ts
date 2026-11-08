@@ -14,7 +14,7 @@ export interface LocaleMeta {
   dir: 'ltr' | 'rtl'
 }
 
-export const NAMESPACES = ['common', 'encyclopedia', 'settings', 'onboarding', 'errors', 'ai'] as const
+export const NAMESPACES = ['common', 'encyclopedia', 'settings', 'onboarding', 'errors', 'ai', 'mcp'] as const
 export const DEFAULT_NS = 'common'
 export const FALLBACK_LANGUAGE = 'en'
 export const LANGUAGE_STORAGE_KEY = 'worldledger.language'

@@ -1,4 +1,4 @@
-import { Plus, Sparkles } from 'lucide-react'
+import { Inbox, Plus, Sparkles } from 'lucide-react'
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
 import { guessCategory } from '../../../core/ai/context'
@@ -11,6 +11,7 @@ import { useDocumentTitle } from '../../../app/shell/useDocumentTitle'
 import { useFormat } from '../../../core/i18n/format'
 import { usePageCounts, useRecentPages, useRedLinks } from '../../../core/lore/api'
 import { categoryName } from '../../../core/lore/categories'
+import { usePendingCount } from '../../../core/mcp/proposals'
 import { ButtonLink } from '../../../ui/Button'
 import { CategoryIcon } from '../../../ui/CategoryIcon'
 import { StatusMark } from '../components/StatusMark'
@@ -24,6 +25,7 @@ export function WorldHome() {
   const counts = usePageCounts(world.id)
   const recent = useRecentPages(world.id, 8)
   const wanted = useRedLinks(world.id)
+  const pending = usePendingCount(world.id) ?? 0
   useDocumentTitle(world.name)
   const navigate = useNavigate()
   const [ai, setAi] = useState<AIRequest | null>(null)
@@ -53,6 +55,16 @@ export function WorldHome() {
           </p>
         )}
       </header>
+
+      {pending > 0 && (
+        <aside className={styles.proposals} aria-labelledby="proposals-notice">
+          <Inbox aria-hidden="true" className={styles.proposalsIcon} />
+          <p id="proposals-notice" className={styles.proposalsText}>{t('mcp:inbox.homeNotice', { count: pending })}</p>
+          <ButtonLink to={`${base}/proposals`} size="sm" variant="primary">
+            {t('mcp:inbox.homeAction')}
+          </ButtonLink>
+        </aside>
+      )}
 
       {total === 0 ? (
         <section className={styles.firstSteps} aria-labelledby="first-steps">

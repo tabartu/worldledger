@@ -75,20 +75,33 @@ async function answer(url: string, call: Call, signal: AbortSignal) {
   setStatus({ calls: status.calls + 1, lastTool: call.tool, lastCallAt: Date.now() })
 }
 
+/** Quick reachability check before long-polling, so the status is right at once. */
+async function probe(url: string, signal: AbortSignal): Promise<'ok' | 'forbidden'> {
+  const res = await fetch(`${url}/status`, { signal, cache: 'no-store' })
+  if (res.status === 403) return 'forbidden'
+  if (!res.ok) throw new Error(`HTTP ${res.status}`)
+  return 'ok'
+}
+
 /** Poll until `signal` aborts. Exported for tests. */
 export async function pollLoop(url: string, signal: AbortSignal): Promise<void> {
   let backoff = 1000
+  let probed = false
   setStatus({ state: 'connecting' })
   while (!signal.aborted) {
     try {
-      const res = await fetch(`${url}/poll?client=${CLIENT_ID}`, { signal, cache: 'no-store' })
-      if (res.status === 403) {
-        setStatus({ state: 'forbidden' })
-        await sleep(10_000, signal)
-        continue
+      if (!probed) {
+        if ((await probe(url, signal)) === 'forbidden') {
+          setStatus({ state: 'forbidden' })
+          await sleep(10_000, signal)
+          continue
+        }
+        probed = true
+        backoff = 1000
+        setStatus({ state: 'connected' })
       }
+      const res = await fetch(`${url}/poll?client=${CLIENT_ID}`, { signal, cache: 'no-store' })
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
-      backoff = 1000
       if (status.state !== 'connected') setStatus({ state: 'connected' })
       if (res.status === 204) continue
       const call = (await res.json()) as Call
@@ -96,6 +109,7 @@ export async function pollLoop(url: string, signal: AbortSignal): Promise<void> 
       void answer(url, call, signal).catch(() => {})
     } catch {
       if (signal.aborted) break
+      probed = false
       setStatus({ state: 'unreachable' })
       await sleep(backoff, signal)
       backoff = Math.min(backoff * 2, 15_000)

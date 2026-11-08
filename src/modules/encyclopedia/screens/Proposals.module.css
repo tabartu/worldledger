@@ -1,0 +1,408 @@
+.page {
+  max-inline-size: var(--page-max);
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+  padding-block: var(--s-6) var(--s-8);
+}
+.head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  justify-content: space-between;
+  gap: var(--s-4);
+  padding-block-end: var(--s-4);
+  border-block-end: 3px double var(--rule-strong);
+}
+.title {
+  font-size: var(--fs-3xl);
+  font-weight: 850;
+  font-stretch: var(--stretch-condensed);
+  line-height: 1;
+  text-transform: uppercase;
+}
+.lede {
+  max-inline-size: var(--measure);
+  margin-block-start: var(--s-2);
+  font-family: var(--font-read);
+  color: var(--ink-2);
+}
+
+/* Waiting / Reviewed */
+.switch {
+  display: inline-flex;
+  border: 1px solid var(--rule-strong);
+  border-radius: var(--radius);
+}
+.switch button {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  min-block-size: 2.25rem;
+  padding-inline: var(--s-3);
+  border: 0;
+  background: none;
+  color: var(--ink-2);
+  font: inherit;
+  font-size: var(--fs-sm);
+  font-weight: 650;
+  cursor: pointer;
+}
+.switch button + button {
+  border-inline-start: 1px solid var(--rule-strong);
+}
+.switch button:hover {
+  color: var(--ink);
+}
+.switch button[aria-pressed='true'] {
+  background: var(--ink);
+  color: var(--paper);
+}
+.count {
+  font-size: var(--fs-xs);
+  font-variant-numeric: tabular-nums;
+  opacity: 0.8;
+}
+
+.noticeSlot:empty {
+  display: none;
+}
+.notice {
+  margin-block-start: var(--s-4);
+  padding-block: var(--s-2);
+  padding-inline: var(--s-3);
+  border-block-start: 2px solid var(--ok);
+  background: color-mix(in oklab, var(--ok) 9%, var(--paper));
+  font-size: var(--fs-sm);
+}
+.notice a {
+  font-weight: 700;
+  color: var(--ink);
+}
+
+/* Waiting proposals: proof slips, one after another like galleys. */
+.list {
+  display: grid;
+}
+.slip {
+  padding-block: var(--s-6) var(--s-5);
+  border-block-end: 3px double var(--rule-strong);
+}
+.slipMeta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-2) var(--s-4);
+  font-size: var(--fs-sm);
+  color: var(--ink-2);
+}
+.kind {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding-block: 0.1rem;
+  padding-inline: 0.4rem;
+  border: 1px solid currentColor;
+  border-radius: 1px;
+  font-size: var(--fs-2xs);
+  font-weight: 750;
+  font-stretch: var(--stretch-semi);
+  letter-spacing: 0.08em;
+  line-height: 1.4;
+  text-transform: uppercase;
+  color: var(--ink);
+  white-space: nowrap;
+}
+.kind[data-kind='update'] {
+  border-style: dashed;
+  color: var(--ink-2);
+}
+.kind svg {
+  inline-size: 0.8rem;
+  block-size: 0.8rem;
+}
+.chapter {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-1);
+  font-weight: 650;
+  color: var(--ink);
+}
+.chapterIcon {
+  inline-size: 1rem;
+  block-size: 1rem;
+  color: var(--chapter, var(--ink-3));
+}
+.when {
+  color: var(--ink-3);
+}
+.slipTitle {
+  margin-block-start: var(--s-2);
+  font-size: var(--fs-2xl);
+  font-weight: 850;
+  font-stretch: var(--stretch-condensed);
+  line-height: 1.05;
+  text-transform: uppercase;
+  overflow-wrap: anywhere;
+  text-wrap: balance;
+}
+.slipTitle a {
+  color: inherit;
+  text-decoration-color: var(--chapter, var(--rule-strong));
+  text-decoration-thickness: 2px;
+  text-underline-offset: 0.15em;
+}
+
+/* Claude's note: set like a marginal note in the reading face. */
+.note,
+.warnings {
+  max-inline-size: var(--measure);
+  margin: var(--s-4) 0 0;
+  padding-inline-start: var(--s-4);
+  border-inline-start: 1px solid var(--rule-strong);
+  font-family: var(--font-read);
+  font-style: italic;
+  color: var(--ink-2);
+}
+.warnings {
+  font-style: normal;
+  font-size: var(--fs-sm);
+}
+.warnings ul {
+  margin: 0;
+  padding-inline-start: 1.1em;
+}
+.noteLabel {
+  margin-block-end: var(--s-1);
+  font-family: var(--font-ui);
+  font-size: var(--fs-2xs);
+  font-style: normal;
+  font-weight: 750;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.preview {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(16rem, 20rem);
+  gap: var(--s-6);
+  align-items: start;
+  margin-block-start: var(--s-5);
+}
+@media (max-width: 56rem) {
+  .preview {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.proof {
+  max-inline-size: var(--measure);
+}
+.addition {
+  padding-inline-start: var(--s-4);
+  border-inline-start: 1px dashed var(--chapter, var(--rule-strong));
+}
+.aliases {
+  margin-block-end: var(--s-3);
+  font-family: var(--font-read);
+  color: var(--ink-2);
+}
+.aliasesLabel {
+  font-family: var(--font-ui);
+  font-size: var(--fs-2xs);
+  font-weight: 750;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.muted {
+  color: var(--ink-3);
+}
+
+.changes {
+  display: grid;
+  gap: var(--s-5);
+  margin-block-start: var(--s-5);
+}
+.changeTitle {
+  margin-block-end: var(--s-2);
+  font-size: var(--fs-xs);
+  font-weight: 800;
+  font-stretch: var(--stretch-semi);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+.current {
+  max-inline-size: var(--measure);
+  margin-block-start: var(--s-3);
+  font-size: var(--fs-sm);
+}
+.current summary {
+  font-weight: 650;
+  cursor: pointer;
+}
+.current > :not(summary) {
+  margin-block-start: var(--s-2);
+  color: var(--ink-2);
+}
+.diff {
+  inline-size: 100%;
+  max-inline-size: 44rem;
+  border-collapse: collapse;
+  font-size: var(--fs-sm);
+}
+.diff th,
+.diff td {
+  padding-block: var(--s-2);
+  padding-inline: 0 var(--s-4);
+  border-block-end: 1px solid var(--rule);
+  text-align: start;
+  vertical-align: top;
+}
+.diff thead th {
+  font-size: var(--fs-2xs);
+  font-weight: 750;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.diff tbody th {
+  font-weight: 650;
+}
+.diff del {
+  color: var(--ink-3);
+  text-decoration-thickness: 1px;
+}
+.diff ins,
+.changes ins {
+  text-decoration: underline;
+  text-decoration-style: double;
+  text-decoration-color: var(--chapter, var(--ink-3));
+  text-underline-offset: 0.2em;
+}
+
+.conflict {
+  max-inline-size: var(--measure);
+  margin-block-start: var(--s-5);
+  padding: var(--s-3) var(--s-4);
+  border: 1.5px dashed var(--ink-3);
+}
+.conflictTitle {
+  font-weight: 750;
+}
+.conflictBody {
+  margin-block-start: var(--s-1);
+  font-family: var(--font-read);
+  color: var(--ink-2);
+}
+.problem {
+  max-inline-size: var(--measure);
+  margin-block-start: var(--s-4);
+  color: var(--danger);
+  font-weight: 600;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+  align-items: center;
+  margin-block-start: var(--s-5);
+}
+.reject {
+  margin-inline-start: auto;
+}
+
+.editor {
+  display: grid;
+  gap: var(--s-4);
+  margin-block-start: var(--s-5);
+  padding: var(--s-4);
+  border-block: 3px double var(--ink);
+  background: var(--paper-2);
+}
+.editorRow {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
+  gap: var(--s-4);
+}
+.bodyInput {
+  font-family: var(--font-read);
+  line-height: 1.55;
+}
+
+.empty {
+  max-inline-size: var(--measure);
+  margin-block-start: var(--s-6);
+  padding: var(--s-5);
+  border: 1.5px dashed var(--rule-strong);
+}
+.emptyTitle {
+  font-size: var(--fs-lg);
+  font-weight: 800;
+  font-stretch: var(--stretch-condensed);
+  text-transform: uppercase;
+}
+.emptyBody {
+  margin-block: var(--s-2) var(--s-4);
+  font-family: var(--font-read);
+  color: var(--ink-2);
+}
+.settingsLink {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  color: var(--ink);
+}
+.settingsLink svg {
+  inline-size: 1rem;
+  block-size: 1rem;
+}
+
+/* Reviewed: a ledger of decisions. */
+.history {
+  display: grid;
+  margin-block-start: var(--s-4);
+}
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  padding-block: var(--s-2);
+  border-block-end: 1px solid var(--rule);
+}
+.rowMark svg {
+  display: block;
+  inline-size: 1.1rem;
+  block-size: 1.1rem;
+}
+.rowMain {
+  display: grid;
+  flex: 1;
+  min-inline-size: 0;
+}
+.rowTitle {
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+.row[data-status='rejected'] .rowTitle {
+  text-decoration: line-through;
+  text-decoration-thickness: 1px;
+  color: var(--ink-2);
+}
+.rowTitle a {
+  color: inherit;
+}
+.rowMeta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-2);
+  font-size: var(--fs-xs);
+  color: var(--ink-3);
+}
+.historyActions {
+  margin-block-start: var(--s-4);
+}

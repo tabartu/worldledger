@@ -29,7 +29,7 @@ describe('chapter and field mapping', () => {
     expect(fields.home).toEqual({ ref: 'Varnhold' })
     expect(fields.affiliation).toEqual([{ ref: 'House Varn' }, { ref: 'The Gray Order' }])
     expect(fields.lifeStatus).toBe('dead')
-    expect(warnings.some((w) => w.includes('Mood'))).toBe(true)
+    expect(warnings).toContainEqual(expect.objectContaining({ code: 'unknown_field', field: 'Mood' }))
   })
 
   it('keeps null to clear a field and warns about values that do not fit', () => {

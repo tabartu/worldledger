@@ -86,6 +86,19 @@
 .tabManage {
   margin-inline-start: auto;
 }
+/* Waiting proposals: a solid ink tally, readable without colour. */
+.pending {
+  min-inline-size: 1.25rem;
+  padding-inline: 0.3rem;
+  border-radius: 1px;
+  background: var(--ink);
+  color: var(--paper);
+  font-size: var(--fs-2xs);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.25rem;
+  text-align: center;
+}
 .tabList > li:first-child .tab {
   margin-inline-start: calc(-1 * var(--s-3));
 }
@@ -96,15 +109,18 @@
   color: var(--ink-3);
   font-weight: 500;
 }
-@media (max-width: 96rem) {
-  .manageLabel {
-    position: absolute;
-    inline-size: 1px;
-    block-size: 1px;
-    overflow: hidden;
-    clip: rect(0 0 0 0);
-    white-space: nowrap;
-  }
+/*
+ * The tab row is capped at the page width, so the view tabs (timeline, maps,
+ * graph, proposals) and Manage show only their icons; the label stays for
+ * screen readers and as a tooltip. Chapter tabs keep their words.
+ */
+.compactLabel {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
 }
 .tabManage .tab::before {
   display: none;

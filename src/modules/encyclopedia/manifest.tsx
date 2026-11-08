@@ -11,6 +11,7 @@ import { CategoryIndex } from './screens/CategoryIndex'
 import { ChapterFields } from './screens/ChapterFields'
 import { ChaptersManage } from './screens/ChaptersManage'
 import { PageReader } from './screens/PageReader'
+import { Proposals } from './screens/Proposals'
 import { WorldHome } from './screens/WorldHome'
 
 export const encyclopediaModule: WorldledgerModule = {
@@ -30,5 +31,6 @@ export const encyclopediaModule: WorldledgerModule = {
     { path: 'maps/:mapId', ...mapView },
     { path: 'chapters', element: <ChaptersManage /> },
     { path: 'chapters/:categoryId', element: <ChapterFields /> },
+    { path: 'proposals', element: <Proposals /> },
   ],
 }

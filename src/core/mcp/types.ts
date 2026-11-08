@@ -2,6 +2,18 @@ import type { ID, WorldDate } from '../lore/types'
 
 export type ProposalStatus = 'pending' | 'accepted' | 'rejected'
 
+/**
+ * Something the bridge could not apply as Claude sent it. Stored as a code
+ * so the inbox can show it in the interface language; Claude gets English.
+ */
+export type ProposalWarning =
+  | { code: 'fields_not_object' }
+  | { code: 'unknown_field'; field: string; chapter: string; known: string }
+  | { code: 'bad_value'; field: string; fieldId: string; value: string; type: string; options?: string }
+  | { code: 'bad_date'; field: 'date' | 'end_date'; value: string }
+  | { code: 'alias_taken'; alias: string; page: string }
+  | { code: 'title_taken'; page: string }
+
 interface ProposalBase {
   id: ID
   worldId: ID
@@ -9,7 +21,7 @@ interface ProposalBase {
   /** Claude's note to the user about this proposal. */
   note?: string
   /** Things the bridge could not apply as given (unknown fields, bad dates…). */
-  warnings: string[]
+  warnings: ProposalWarning[]
   createdAt: number
   decidedAt?: number
   /** The page created or changed when the proposal was accepted. */
