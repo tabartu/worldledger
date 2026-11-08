@@ -43,6 +43,7 @@ Available now:
   - Answers stream in as they're written. Nothing is saved until you review, edit and accept it.
   - The AI writes in the world's content language.
   - Only the relevant pages are sent: the page, what it links to and what links to it, and one more ring for consistency checks. The whole world is never sent.
+- **Claude connection (MCP).** Claude Desktop, Claude Code or any MCP client can read your worlds and propose new pages and edits. Proposals wait in each world's **Proposals** inbox until you review, edit and accept them. See [Claude connection (MCP)](#claude-connection-mcp).
 - **Export and backup.** In each world's settings:
   - **JSON backup**: everything, including maps. Restore it from the shelf with **Restore from backup**, either replacing the world or importing it as a copy.
   - **Markdown zip**: one `.md` file per page with YAML front matter, in a folder per chapter; works with Obsidian.
@@ -155,6 +156,52 @@ Add one file to `src/core/ai/providers/` that default-exports an `AIProvider`; t
 - Add its name and help text to `src/locales/*/ai.json` under `provider.<id>`.
 - Prompts live in `src/core/ai/prompts/` and are provider-agnostic.
 
+## Claude connection (MCP)
+
+Worldledger can act as an [MCP](https://modelcontextprotocol.io) server, so Claude can read your lore and propose new lore while you talk to it. Your worlds stay in the browser; a small bridge on your computer passes Claude's requests to the open Worldledger tab:
+
+```
+Claude ──MCP (stdio)──▶ bridge/worldledger-mcp.mjs ◀──HTTP, 127.0.0.1:8788──▶ Worldledger tab
+```
+
+The same thing as a list: Claude starts the bridge and talks to it over standard input and output. The Worldledger tab asks the bridge for work over HTTP on your own computer (port 8788), runs each request against its IndexedDB and sends back the answer.
+
+**Setup** (once per computer; needs Node.js 18 or newer):
+
+1. In Worldledger, open **Settings → Claude connection** and download `worldledger-mcp.mjs` (or use `bridge/worldledger-mcp.mjs` from this repository). It is a single file with no dependencies.
+2. Register it with Claude:
+   - **Claude Desktop:** Settings → Developer → Edit Config, then add to `claude_desktop_config.json`:
+     ```json
+     { "mcpServers": { "worldledger": { "command": "node", "args": ["/path/to/worldledger-mcp.mjs"] } } }
+     ```
+     and restart Claude Desktop.
+   - **Claude Code:** `claude mcp add worldledger -- node /path/to/worldledger-mcp.mjs`
+3. Turn on **Connect to Claude** in Settings. The status line says when the bridge is connected. Keep a Worldledger tab open while you work.
+
+The settings page fills in these commands for you, including the path if you type where you saved the file.
+
+**Tools Claude gets:**
+
+| Tool | What it does |
+|---|---|
+| `list_worlds`, `get_world` | Worlds, and a world's summary, calendar, eras, chapters and their stat-block fields |
+| `search_pages`, `list_pages`, `get_page` | Full-text search, page lists by chapter, one page with text, fields, links and backlinks |
+| `get_related_lore` | A page (or a topic with no page yet) plus the pages around it, as compact text |
+| `get_timeline`, `list_missing_pages` | The dated history by era; red links ranked by how often they're used |
+| `propose_page`, `propose_edit` | A new page, or an edit to an existing one (append text, replace text, set fields, add aliases) |
+| `list_proposals` | Claude's earlier proposals and whether you accepted them |
+
+Claude may name chapters and fields in any interface language ("Character", "Karakter", "born", "Doğum"); page references are titles and dates are a year or `{year, month, day}`. Anything that doesn't fit is left out and reported back to Claude and in the inbox.
+
+**Reviewing.** Each world's **Proposals** tab (the inbox icon, with the number waiting) shows every proposal as it would appear: the page text and stat block, or for an edit, the added text and a before/after table of fields. You can accept it, edit it first or reject it. Accepted pages are added as drafts. If a proposed new page has the title of an existing page, you can add it to that page instead or give it another title. **Save Claude's changes directly** in Settings skips the review (off by default).
+
+**Options for the bridge** (environment variables):
+
+- `WORLDLEDGER_BRIDGE_PORT` (default `8788`). Change the bridge address in Settings to match.
+- `WORLDLEDGER_ORIGINS`: which sites may connect, comma-separated. By default, `localhost` and `https://*.github.io`. If you host Worldledger elsewhere, set it to that origin; the settings page includes it in the commands.
+
+**Privacy.** The bridge listens only on `127.0.0.1` and accepts only the allowed origins. Claude sees only what its tools return, and proposals are not part of backups. Several Claude apps can use the bridge at once (the second one forwards to the first), and with several Worldledger tabs open only one answers. Safari blocks https pages from calling `http://127.0.0.1`, so use Chrome, Edge or Firefox with the hosted app.
+
 ## Your data
 
 All worlds live in your browser's IndexedDB, in a database named `worldledger`. Nothing leaves your machine. Clearing site data for the app deletes your worlds, so download a JSON backup from each world's settings now and then.
@@ -190,14 +237,16 @@ src/
 ├─ core/
 │  ├─ db/          Dexie (IndexedDB) schema
 │  ├─ i18n/        i18next setup, locale discovery, Intl formatters
-│  └─ lore/        Domain layer: types, worlds, pages, links, calendar
-│                  api.ts is the read API every module uses
+│  ├─ lore/        Domain layer: types, worlds, pages, links, calendar
+│  │               api.ts is the read API every module uses
+│  └─ mcp/         Claude connection: bridge client, tool handlers, proposals
 ├─ modules/
 │  ├─ registry.ts  Installed modules (routes are mounted from here)
 │  └─ encyclopedia/  Module 1: Lore Encyclopedia (screens, components)
 ├─ ui/             Design tokens and shared UI primitives
 ├─ locales/        One folder per interface language
 └─ sample-data/    Demo worlds (English and Turkish)
+bridge/            MCP bridge for Claude (single file, no dependencies) and its test
 scripts/           Repository checks (i18n, logical CSS)
 ```
 

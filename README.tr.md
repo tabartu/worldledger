@@ -43,6 +43,7 @@ Worldledger, oyun geliştiricilerin oyun dünyalarının lore'unu yazıp yönett
   - Yanıtlar yazıldıkça akar. Sen gözden geçirip düzenleyip onaylamadan hiçbir şey kaydedilmez.
   - Yapay zekâ dünyanın içerik dilinde yazar.
   - Yalnızca ilgili sayfalar gönderilir: sayfanın kendisi, bağlantı verdiği ve ona bağlantı veren sayfalar, tutarlılık kontrolünde bir halka daha. Dünyanın tamamı asla gönderilmez.
+- **Claude bağlantısı (MCP).** Claude Desktop, Claude Code ya da herhangi bir MCP istemcisi dünyalarını okuyabilir, yeni sayfalar ve düzenlemeler önerebilir. Öneriler, sen inceleyip düzenleyip kabul edene kadar her dünyanın **Öneriler** kutusunda bekler. Bkz. [Claude bağlantısı (MCP)](#claude-bağlantısı-mcp).
 - **Dışa aktarma ve yedekleme.** Her dünyanın ayarlarında:
   - **JSON yedek**: haritalar dahil her şey. Raftaki **Yedekten geri yükle** ile geri yükleyebilir, dünyayı değiştirebilir ya da kopya olarak içe aktarabilirsin.
   - **Markdown zip**: her sayfa için YAML başlık bilgisiyle bir `.md` dosyası, her bölüm ayrı klasörde; Obsidian ile çalışır.
@@ -155,6 +156,52 @@ Safari, https üzerinden sunulan sayfaların `http://localhost`'a istek atmasın
 - Sağlayıcının adını ve yardım metnini `src/locales/*/ai.json` içinde `provider.<id>` altına ekle.
 - İstemler (prompt'lar) `src/core/ai/prompts/` içindedir ve sağlayıcıdan bağımsızdır.
 
+## Claude bağlantısı (MCP)
+
+Worldledger bir [MCP](https://modelcontextprotocol.io) sunucusu gibi çalışabilir; böylece Claude, sen onunla konuşurken lore'unu okuyabilir ve yeni bilgi önerebilir. Dünyaların tarayıcıda kalır; bilgisayarındaki küçük bir köprü, Claude'un isteklerini açık Worldledger sekmesine iletir:
+
+```
+Claude ──MCP (stdio)──▶ bridge/worldledger-mcp.mjs ◀──HTTP, 127.0.0.1:8788──▶ Worldledger sekmesi
+```
+
+Aynı şey liste olarak: Claude köprüyü başlatır ve onunla standart giriş/çıkış üzerinden konuşur. Worldledger sekmesi kendi bilgisayarındaki HTTP üzerinden (port 8788) köprüden iş ister, her isteği kendi IndexedDB'sinde çalıştırır ve yanıtı geri gönderir.
+
+**Kurulum** (her bilgisayarda bir kez; Node.js 18 ya da daha yenisi gerekir):
+
+1. Worldledger'da **Ayarlar → Claude bağlantısı**'nı aç ve `worldledger-mcp.mjs` dosyasını indir (ya da bu depodaki `bridge/worldledger-mcp.mjs`'i kullan). Bağımlılığı olmayan tek bir dosyadır.
+2. Claude'a tanıt:
+   - **Claude Desktop:** Settings → Developer → Edit Config, ardından `claude_desktop_config.json`'a ekle:
+     ```json
+     { "mcpServers": { "worldledger": { "command": "node", "args": ["/dosya/yolu/worldledger-mcp.mjs"] } } }
+     ```
+     ve Claude Desktop'ı yeniden başlat.
+   - **Claude Code:** `claude mcp add worldledger -- node /dosya/yolu/worldledger-mcp.mjs`
+3. Ayarlar'da **Claude'a bağlan**'ı aç. Durum satırı köprü bağlandığında bunu söyler. Çalışırken bir Worldledger sekmesini açık tut.
+
+Ayarlar sayfası bu komutları senin için doldurur; dosyayı kaydettiğin yeri yazarsan yolu da.
+
+**Claude'un araçları:**
+
+| Araç | Ne yapar |
+|---|---|
+| `list_worlds`, `get_world` | Dünyalar; bir dünyanın özeti, takvimi, çağları, bölümleri ve stat block alanları |
+| `search_pages`, `list_pages`, `get_page` | Tam metin arama, bölüme göre sayfa listesi, metni, alanları, bağlantıları ve geri bağlantılarıyla tek sayfa |
+| `get_related_lore` | Bir sayfa (ya da henüz sayfası olmayan bir konu) ve çevresindeki sayfalar, kısa metin olarak |
+| `get_timeline`, `list_missing_pages` | Çağlara göre tarihli geçmiş; ne kadar kullanıldığına göre sıralı kırmızı bağlantılar |
+| `propose_page`, `propose_edit` | Yeni bir sayfa ya da var olan sayfada düzenleme (metin ekleme, metni değiştirme, alan doldurma, takma ad ekleme) |
+| `list_proposals` | Claude'un önceki önerileri ve kabul edilip edilmedikleri |
+
+Claude bölüm ve alan adlarını herhangi bir arayüz dilinde verebilir ("Character", "Karakter", "born", "Doğum"); sayfa referansları başlıktır, tarihler bir yıl ya da `{year, month, day}` olur. Uymayan her şey dışarıda bırakılır; hem Claude'a hem öneriler kutusunda bildirilir.
+
+**İnceleme.** Her dünyanın **Öneriler** sekmesi (bekleyen sayısıyla birlikte gelen kutu simgesi) her öneriyi kitapta görüneceği gibi gösterir: sayfa metni ve stat block'u, düzenlemelerde ise eklenecek metin ve alanların önce/sonra tablosu. Öneriyi kabul edebilir, önce düzenleyebilir ya da reddedebilirsin. Kabul edilen sayfalar taslak olarak eklenir. Önerilen yeni sayfa var olan bir sayfayla aynı başlığı taşıyorsa, onu o sayfaya ekleyebilir ya da başka bir başlık verebilirsin. Ayarlar'daki **Claude'un değişikliklerini doğrudan kaydet** incelemeyi atlar (varsayılan olarak kapalı).
+
+**Köprü seçenekleri** (ortam değişkenleri):
+
+- `WORLDLEDGER_BRIDGE_PORT` (varsayılan `8788`). Ayarlar'daki köprü adresini buna göre değiştir.
+- `WORLDLEDGER_ORIGINS`: bağlanabilecek siteler, virgülle ayrılmış. Varsayılan olarak `localhost` ve `https://*.github.io`. Worldledger'ı başka bir yerde barındırıyorsan o adresi yaz; ayarlar sayfası bunu komutlara kendisi ekler.
+
+**Gizlilik.** Köprü yalnızca `127.0.0.1`'de dinler ve yalnızca izin verilen sitelerden bağlantı kabul eder. Claude yalnızca araçların döndürdüğünü görür; öneriler yedeklere girmez. Birden fazla Claude uygulaması köprüyü aynı anda kullanabilir (ikincisi birincisine iletir); birden çok Worldledger sekmesi açıksa yalnızca biri yanıt verir. Safari, https sayfalarının `http://127.0.0.1`'e erişmesini engeller; barındırılan uygulamayla Chrome, Edge ya da Firefox kullan.
+
 ## Verilerin
 
 Tüm dünyalar tarayıcının IndexedDB'sinde, `worldledger` adlı veritabanında durur. Hiçbir şey bilgisayarından çıkmaz. Uygulamanın site verilerini silersen dünyaların da silinir; bu yüzden arada bir her dünyanın ayarlarından JSON yedek indir.
@@ -190,14 +237,16 @@ src/
 ├─ core/
 │  ├─ db/          Dexie (IndexedDB) şeması
 │  ├─ i18n/        i18next kurulumu, dil keşfi, Intl biçimlendiricileri
-│  └─ lore/        Alan katmanı: tipler, dünyalar, sayfalar, bağlantılar, takvim
-│                  api.ts tüm modüllerin kullandığı okuma arayüzü
+│  ├─ lore/        Alan katmanı: tipler, dünyalar, sayfalar, bağlantılar, takvim
+│  │               api.ts tüm modüllerin kullandığı okuma arayüzü
+│  └─ mcp/         Claude bağlantısı: köprü istemcisi, araç işleyicileri, öneriler
 ├─ modules/
 │  ├─ registry.ts  Kurulu modüller (yönlendirmeler buradan bağlanır)
 │  └─ encyclopedia/  1. modül: Lore Ansiklopedisi (ekranlar, bileşenler)
 ├─ ui/             Tasarım değişkenleri ve ortak arayüz bileşenleri
 ├─ locales/        Her arayüz dili için bir klasör
 └─ sample-data/    Örnek dünyalar (İngilizce ve Türkçe)
+bridge/            Claude için MCP köprüsü (tek dosya, bağımlılıksız) ve testi
 scripts/           Depo denetimleri (i18n, logical CSS)
 ```
 
